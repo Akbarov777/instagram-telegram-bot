@@ -3,16 +3,16 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Con
 import yt_dlp
 import os
 
-# ⬇️ Token to‘g‘ri
+# BotFather tokeningizni shu yerga yozing
 TOKEN = "8376760305:AAFyHndrBBqcsTqBIOopdMKeAbAUipYe-AU"
 
 # /start komandasi
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "👋 Salom!\nInstagram linkini yubor — video va audio beraman."
+        "👋 Salom!\nInstagram video linkini yubor, men videoni beraman."
     )
 
-# Video + Audio (ffmpeg siz)
+# Instagram videoni olish funksiyasi
 async def download_instagram(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
 
@@ -20,40 +20,27 @@ async def download_instagram(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("❌ Bu Instagram link emas")
         return
 
-    await update.message.reply_text("⏳ Video va audio yuklanmoqda, kut...")
+    await update.message.reply_text("⏳ Video yuklanmoqda, kut...")
 
     try:
         # ===== VIDEO =====
         video_opts = {
-            'format': 'mp4',
             'outtmpl': 'video.%(ext)s',
-            'quiet': True
+            'format': 'mp4'
         }
 
         with yt_dlp.YoutubeDL(video_opts) as ydl:
             ydl.download([url])
 
+        video_file = None
         for file in os.listdir():
             if file.startswith("video.") and file.endswith(".mp4"):
-                await update.message.reply_video(video=open(file, 'rb'))
-                os.remove(file)
+                video_file = file
                 break
 
-        # ===== AUDIO (FFmpeg YO‘Q) =====
-        audio_opts = {
-            'format': 'bestaudio',
-            'outtmpl': 'audio.%(ext)s',
-            'quiet': True
-        }
-
-        with yt_dlp.YoutubeDL(audio_opts) as ydl:
-            ydl.download([url])
-
-        for file in os.listdir():
-            if file.startswith("audio."):
-                await update.message.reply_audio(audio=open(file, 'rb'))
-                os.remove(file)
-                break
+        if video_file:
+            await update.message.reply_video(video=open(video_file, 'rb'))
+            os.remove(video_file)
 
     except Exception as e:
         await update.message.reply_text("❌ Xatolik yuz berdi")
